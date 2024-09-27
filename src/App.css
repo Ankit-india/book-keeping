@@ -1,13 +1,13 @@
 /* Global styles */
 * {
   margin: 0;
-  padding: 0;
+  padding: 0; /* Changed to 0 for consistency */
   box-sizing: border-box;
 }
 
 body {
   font-family: "Roboto", sans-serif;
-  background-color: #7ba03f;
+  background-color: #3f83a0;
   color: #336ed3;
   height: 100vh;
   display: flex;
@@ -16,7 +16,7 @@ body {
 }
 
 .container {
-  background-color: #fff;
+  background-color: #e4d777;
   padding: 40px;
   width: 100%;
   max-width: 500px;
@@ -72,7 +72,7 @@ button:hover {
 /* Suggestions dropdown */
 .suggestions-dropdown {
   position: absolute;
-  top: 100%; /* Position dropdown right under the input */
+  top: 100%;
   left: 0;
   right: 0;
   background-color: white;
@@ -81,7 +81,7 @@ button:hover {
   margin-top: 5px;
   max-height: 200px;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
 
@@ -92,7 +92,7 @@ button:hover {
 }
 
 .suggestion-item:hover {
-  background-color: #88a5c2;
+  background-color: #f0f0f0; /* Changed to a lighter hover color for simplicity */
 }
 
 /* Media queries for smaller screens */
@@ -101,13 +101,34 @@ button:hover {
     padding: 20px;
   }
 
-  header h1 {
-    font-size: 28px;
-  }
-
   input,
   select,
   button {
     font-size: 14px;
   }
+}
+
+h1 {
+  font-size: 24px; /* Adjusted font size */
+  margin-bottom: 20px;
+}
+
+/* Calendar icon for date input */
+.date-picker-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-picker-wrapper input[type="date"] {
+  padding-right: 40px; /* Space for icon */
+}
+
+.calendar-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none; /* Disable pointer events */
 }
