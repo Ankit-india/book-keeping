@@ -5,6 +5,9 @@ import "./App.css";
 interface Suggestion {
   acName: string;
   department: string | null;
+  thekedaarKaNaam: string | null;
+  acIdentification: string | null;
+  id: string | null;
 }
 
 const App: React.FC = () => {
@@ -12,39 +15,50 @@ const App: React.FC = () => {
   const [amount, setAmount] = useState("");
   const [identification, setIdentification] = useState("");
   const [department, setDepartment] = useState<string | null>(null);
-  const [thekedaarKaNaam, setThekedaarKaNaam] = useState("");
+  const [thekedaarKaNaam, setThekedaarKaNaam] = useState<string | null>(null);
   const [date, setDate] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [id, setId] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLDivElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const accountNameInputRef = useRef<HTMLInputElement>(null);
 
   const departments = [
     { label: "Packing", value: "packing" },
     { label: "Dispatch", value: "dispatch" },
     { label: "Control", value: "control" },
     { label: "Coding", value: "coding" },
+    { label: "Refrigeration", value: "refrigeration" },
     { label: "Engineering", value: "engineering" },
     { label: "Electrical", value: "electrical" },
     { label: "Finance", value: "finance" },
-    { label: "HR", value: "hr" },
+    { label: "Housekeeping", value: "housekeeping" },
     { label: "Miscellaneous", value: "miscellaneous" },
     { label: "Administration", value: "administration" },
     { label: "Mother Dairy", value: "mother dairy" },
     { label: "MIS", value: "mis" },
     { label: "ETP", value: "etp" },
+    { label: "Workshop", value: "workshop" },
+    { label: "Lab", value: "lab" },
+    { label: "Production", value: "production" },
+    { label: "Boiler", value: "boiler" },
+    { label: "Test", value: "test" },
   ];
+
+  const apiUrl = "http://192.168.1.2:7080";
 
   const debouncedFetchSuggestions = useCallback(
     debounce(async (text: string) => {
       if (text.length >= 3) {
         try {
+          console.log(`Fetching suggestions for: ${text}`);
           const response = await fetch(
-            `http://localhost:7080/api/acNameWithDepartment?keyword=${text}`
+            `${apiUrl}/api/acNameWithDepartment?keyword=${text}`
           );
           const data = await response.json();
-          console.log(data);
+          console.log("Suggestions data:", data);
           setSuggestions(data || []);
           setShowDropdown(true);
         } catch (error) {
@@ -66,6 +80,9 @@ const App: React.FC = () => {
   const handleSuggestionClick = (suggestion: Suggestion) => {
     setAccountName(suggestion.acName);
     setDepartment(suggestion.department);
+    setIdentification(suggestion.acIdentification ?? "");
+    setThekedaarKaNaam(suggestion.thekedaarKaNaam ?? "");
+    setId(suggestion.id); // Set the id
     setShowDropdown(false);
   };
 
@@ -83,10 +100,11 @@ const App: React.FC = () => {
     const formattedDate = formatDate(date);
 
     const payload = {
+      id: id, // Include the id in the payload
       name: accountName,
       department: department,
       amount: parseFloat(amount),
-      acIdentification: identification,
+      accountIdentifier: identification,
       thekedaarKaNaam: thekedaarKaNaam,
       date: formattedDate,
     };
@@ -95,11 +113,12 @@ const App: React.FC = () => {
       console.log("date : " + payload.date);
       console.log("name : " + payload.name);
       console.log("department : " + payload.department);
-      console.log("thekedaarKanaam : " + payload.thekedaarKaNaam);
+      console.log("thekedaarKaNaam : " + payload.thekedaarKaNaam);
       console.log("amount : " + payload.amount);
-      console.log("identification : " + payload.acIdentification);
+      console.log("identifier : " + payload.accountIdentifier);
+      console.log("id : " + payload.id); // Log the id
 
-      const response = await fetch("http://localhost:7080/api/add", {
+      const response = await fetch(`${apiUrl}/api/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,14 +134,18 @@ const App: React.FC = () => {
       console.log("API Response:", data);
       alert("Form submitted successfully");
 
-      // Reset all fields except date
+      // Reset all fields except date and thekedaarKaNaam
       setAccountName("");
       setAmount("");
       setIdentification("");
       setDepartment(null);
-      setThekedaarKaNaam("");
       setSuggestions([]);
+      setThekedaarKaNaam("");
       setShowDropdown(false);
+      setId(null); // Reset the id
+
+      // Move cursor to account name input field
+      accountNameInputRef.current?.focus();
     } catch (error) {
       console.error("Error submitting the form:", error);
       alert("Failed to submit form");
@@ -176,6 +199,7 @@ const App: React.FC = () => {
             value={accountName}
             onChange={(e) => handleInputChange(e.target.value)}
             onFocus={() => setShowDropdown(true)}
+            ref={accountNameInputRef} // Attach the ref here
           />
 
           {showDropdown && suggestions.length > 0 && (
@@ -186,7 +210,10 @@ const App: React.FC = () => {
                   onClick={() => handleSuggestionClick(suggestion)}
                   className="suggestion-item"
                 >
-                  {suggestion.acName} ({suggestion.department})
+                  {suggestion.acName} ({suggestion.department}
+                  {suggestion.acIdentification &&
+                    `, ${suggestion.acIdentification}`}
+                  )
                 </li>
               ))}
             </ul>
@@ -210,7 +237,7 @@ const App: React.FC = () => {
         <input
           type="text"
           placeholder="Thekedaar ka naam"
-          value={thekedaarKaNaam}
+          value={thekedaarKaNaam ?? ""}
           onChange={(e) => setThekedaarKaNaam(e.target.value)}
         />
 
