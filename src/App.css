@@ -132,3 +132,7 @@ h1 {
   color: #888;
   pointer-events: none; /* Disable pointer events */
 }
+
+.suggestion-item.highlighted {
+  background-color: #d3d3d3;
+}

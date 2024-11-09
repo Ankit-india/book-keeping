@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [id, setId] = useState<string | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   const inputRef = useRef<HTMLDivElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -44,10 +45,12 @@ const App: React.FC = () => {
     { label: "Lab", value: "lab" },
     { label: "Production", value: "production" },
     { label: "Boiler", value: "boiler" },
+    { label: "Store", value: "store" },
+    { label: "TTO", value: "tto" },
     { label: "Test", value: "test" },
   ];
 
-  const apiUrl = "http://192.168.1.2:7080";
+  const apiUrl = "http://192.168.1.7:7080";
 
   const debouncedFetchSuggestions = useCallback(
     debounce(async (text: string) => {
@@ -84,6 +87,7 @@ const App: React.FC = () => {
     setThekedaarKaNaam(suggestion.thekedaarKaNaam ?? "");
     setId(suggestion.id); // Set the id
     setShowDropdown(false);
+    setHighlightedIndex(-1); // Reset the highlighted index
   };
 
   const formatDate = (dateStr: string) => {
@@ -152,6 +156,31 @@ const App: React.FC = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showDropdown && suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex === suggestions.length - 1 ? 0 : prevIndex + 1
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex <= 0 ? suggestions.length - 1 : prevIndex - 1
+        );
+      } else if (e.key === "Enter") {
+        if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+          e.preventDefault();
+          handleSuggestionClick(suggestions[highlightedIndex]);
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setShowDropdown(false);
+        setHighlightedIndex(-1); // Reset the highlighted index
+      }
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -168,6 +197,12 @@ const App: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [inputRef]);
+
+  useEffect(() => {
+    if (showDropdown && suggestions.length > 0) {
+      setHighlightedIndex(0); // Set the initial highlighted index when dropdown is shown
+    }
+  }, [showDropdown, suggestions]);
 
   return (
     <div className="container">
@@ -200,6 +235,7 @@ const App: React.FC = () => {
             onChange={(e) => handleInputChange(e.target.value)}
             onFocus={() => setShowDropdown(true)}
             ref={accountNameInputRef} // Attach the ref here
+            onKeyDown={handleKeyDown} // Add the onKeyDown handler here
           />
 
           {showDropdown && suggestions.length > 0 && (
@@ -208,12 +244,13 @@ const App: React.FC = () => {
                 <li
                   key={idx}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="suggestion-item"
+                  className={`suggestion-item ${
+                    highlightedIndex === idx ? "highlighted" : ""
+                  }`}
                 >
-                  {suggestion.acName} ({suggestion.department}
-                  {suggestion.acIdentification &&
-                    `, ${suggestion.acIdentification}`}
-                  )
+                  {`${suggestion.acName} (${
+                    suggestion.acIdentification || ""
+                  }, ${suggestion.department || ""})`}
                 </li>
               ))}
             </ul>
